@@ -1,0 +1,26 @@
+version: "3"
+
+services:
+  app:
+    build:
+      context: ./app/
+      args:
+        PYTHON_VERSION: "${PYTHON_VERSION}"
+    container_name: "app"
+    environment:
+      REDIS_HOST: "${REDIS_HOST}"
+      REDIS_PORT: "${REDIS_PORT}"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:${REDIS_VERSION}-alpine
+    volumes:
+      - redis-vol:/data
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+         
+volumes:
+  redis-vol: {}

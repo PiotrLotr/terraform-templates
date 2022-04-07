@@ -1,0 +1,21 @@
+Create a Terraform codebase setup with the following:
+
++ provider.tf file with configuration for AWS - any region you choose
++ a variables.tf file with a variable named prefix
++ a s3.tf file, creating an S3 bucket
+- a l ambda.tf file, creating a AWS Lambda function with:
+  - a namewith your chosen var.prefix
+  - an environment variable named BUCKET_ARN with the ARN of the created S3 bucket
+  - non-VPC Lambda (defualt one)
+  - using an IAM role created in iam.tf
+  - code uploaded from local lambda.py file (many ways to do it)
+- an iam.tf file, creating an IAM role:
+  - assumeable by the Lambda service
+  - giving full access to the S3 bucket created in s3.tf file
+- lambda.py file:
+  import os
+  BUCKET_ARN = os.environ['BUCKET_ARN']
+  print("My bucket ARN is: " + BUCKET_ARN)
+- null_resource - to pack up the code
+
+The codebase MUST pass terraform validate.

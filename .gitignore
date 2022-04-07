@@ -1,0 +1,9 @@
+/ecr-template/.terraform
+/ecr-template/.terraform/*
+/ecr-template/.terraform.lock.hcl
+/ecr-template/terraform.tfstate.d
+
+/python-app-infrastructure/.terraform
+/python-app-infrastructure/.terraform/*
+/python-app-infrastructure/.terraform.lock.hcl
+/python-app-infrastructure/terraform.tfstate.d
