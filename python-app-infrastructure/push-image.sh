@@ -4,6 +4,13 @@ REGION="eu-central-1"
 USERNAME="AWS"
 REGISTRY=""
 
+# TODO: Number of account as a switch
+echo "Provide your account number..."
+read ACC_NR
+# TODO: Try with module. Region already declared in ecr.tf in another terraform config.
+# echo "Provide region..."
+
+
 # {case statement, regarding ecr name, infromation output}
 echo "1 - for deploy to prod, 2 - for deploy to dev"
 read INPUT

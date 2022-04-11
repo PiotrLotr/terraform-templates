@@ -1,14 +1,14 @@
 [
   {
     "name": "redis",
-    "image": "${redis_image}",
+    "image": "${app_image}",
     "cpu": ${fargate_cpu},
     "memory": ${fargate_memory},
     "networkMode": "awsvpc",
     "portMappings": [
       {
-        "containerPort": ${redis_port},
-        "hostPort": ${redis_port}
+        "containerPort": ${app_port},
+        "hostPort": ${app_port}
       }
     ]
   }

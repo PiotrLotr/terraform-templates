@@ -5,7 +5,9 @@ resource "aws_ecs_cluster" "main" {
 data "template_file" "python_app" {
   template = "${file("./containers-definitions/python-app.json.tpl")}"
 
+# TODO: Declare only one template file
   vars = {
+    # app_name       = ""
     app_image      = "${var.app_image}"
     app_port       = "${var.app_port}"
     fargate_cpu    = "${var.fargate_cpu}"
@@ -54,11 +56,10 @@ resource "aws_ecs_service" "main-app" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    security_groups  = [aws_security_group.ecs_tasks.id]
+    security_groups  = [aws_security_group.ecs-app-sg.id]
     subnets          = aws_subnet.private.*.id
     # assign_public_ip = no
   }
-
   load_balancer {
     target_group_arn = aws_alb_target_group.app.id
     container_name   = "python-app"
@@ -70,20 +71,14 @@ resource "aws_ecs_service" "main-app" {
 resource "aws_ecs_service" "main-redis" {
   name            = "redis-service"
   cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.app.arn
+  task_definition = aws_ecs_task_definition.redis.arn
   desired_count   = var.redis_count
   launch_type     = "FARGATE"
 
   network_configuration {
-    security_groups  = [aws_security_group.ecs_tasks.id]
+    security_groups  = [aws_security_group.ecs-redis-sg.id]
     subnets          = aws_subnet.private.*.id
     # assign_public_ip = no
-  }
-
-  load_balancer {
-    target_group_arn = aws_alb_target_group.app.id
-    container_name   = "redis"
-    container_port   = var.redis_port
   }
 
 }
