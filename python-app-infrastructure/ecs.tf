@@ -3,26 +3,26 @@ resource "aws_ecs_cluster" "main" {
 }
 
 data "template_file" "python_app" {
-  template = file("./containers-definitions/python-app.json.tpl")
+  template = "${file("./containers-definitions/python-app.json.tpl")}"
 
   vars = {
-    app_image      = var.app_image
-    app_port       = var.app_port
-    fargate_cpu    = var.fargate_cpu
-    fargate_memory = var.fargate_memory
-    aws_region     = var.aws_region
+    app_image      = "${var.app_image}"
+    app_port       = "${var.app_port}"
+    fargate_cpu    = "${var.fargate_cpu}"
+    fargate_memory = "${var.fargate_memory}"
+    aws_region     = "${var.aws_region}"
   }
 }
 
-data "template_file" "redis" {
-  template = file("./containers-definitions/redis.json.tpl")
+data "template_file" "redis-template" {
+  template = "${file("./containers-definitions/redis.json.tpl")}"
 
   vars = {
-    app_image      = var.redis_image
-    app_port       = var.redis_port
-    fargate_cpu    = var.fargate_cpu
-    fargate_memory = var.fargate_memory
-    aws_region     = var.aws_region
+    app_image      = "${var.redis_image}"
+    app_port       = "${var.redis_port}"
+    fargate_cpu    = "${var.fargate_cpu}"
+    fargate_memory = "${var.fargate_memory}"
+    aws_region     = "${var.aws_region}"
   }
 }
 
@@ -43,10 +43,10 @@ resource "aws_ecs_task_definition" "redis" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.fargate_cpu
   memory                   = var.fargate_memory
-  container_definitions    = data.template_file.redis.rendered
+  container_definitions    = data.template_file.redis-template.rendered
 }
 
-resource "aws_ecs_service" "main" {
+resource "aws_ecs_service" "main-app" {
   name            = "app-service"
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.app.arn
@@ -67,7 +67,7 @@ resource "aws_ecs_service" "main" {
   depends_on = [aws_alb_listener.front_end, aws_iam_role_policy_attachment.ecs_task_execution_role]
 }
 
-resource "aws_ecs_service" "main" {
+resource "aws_ecs_service" "main-redis" {
   name            = "redis-service"
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.app.arn
