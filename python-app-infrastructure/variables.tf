@@ -7,12 +7,12 @@ variable "aws_region" {
 
 variable "ecs_task_execution_role_name" {
   description = "ECS task execution role name"
-  default = "myEcsTaskExecutionRole"
+  default     = "myEcsTaskExecutionRole"
 }
 
 variable "ecs_auto_scale_role_name" {
   description = "ECS auto scale role Name"
-  default = "myEcsAutoScaleRole"
+  default     = "myEcsAutoScaleRole"
 }
 
 variable "az_count" {
@@ -20,9 +20,11 @@ variable "az_count" {
   default     = "3"
 }
 
+# TODO: Hardoced var alarm in default
 variable "app_image" {
   description = "Docker image to run in the ECS cluster"
   default     = "251865263936.dkr.ecr.eu-central-1.amazonaws.com/app-dev:latest"
+
 }
 
 variable "redis_image" {
@@ -33,6 +35,11 @@ variable "redis_image" {
 variable "app_port" {
   description = "Port exposed by the docker image to redirect traffic to"
   default     = 80
+}
+
+variable "redis_host" {
+  description = "Redis hostname"
+  default     = "redis"
 }
 
 variable "redis_port" {
@@ -63,3 +70,4 @@ variable "fargate_memory" {
   description = "Fargate instance memory to provision (in MiB)"
   default     = "2048"
 }
+

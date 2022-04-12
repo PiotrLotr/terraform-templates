@@ -5,17 +5,22 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_vpc" "main" {
-  cidr_block = "172.17.0.0/16"
+  cidr_block           = "172.17.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
   tags = {
     Name = "vpc"
   }
+
+
 }
 
 # Create var.az_count private subnets, each in a different AZ
 resource "aws_subnet" "private" {
   count             = var.az_count
   cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index] 
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   vpc_id            = aws_vpc.main.id
   tags = {
     Name = "private-${count.index}"
@@ -37,6 +42,9 @@ resource "aws_subnet" "public" {
 # Internet Gateway for the public subnet
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.main.id
+  # DNS hostnames
+  # Disabled
+
 }
 
 # Route the public subnet traffic through the IGW

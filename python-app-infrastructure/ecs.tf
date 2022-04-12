@@ -1,25 +1,50 @@
 resource "aws_ecs_cluster" "main" {
   name = "app-cluster"
+
+  configuration {
+    execute_command_configuration {
+      kms_key_id = aws_kms_key.example.arn
+      logging    = "OVERRIDE"
+
+      log_configuration {
+        cloud_watch_encryption_enabled = true
+        cloud_watch_log_group_name     = aws_cloudwatch_log_group.example.name
+      }
+    }
+  }
 }
 
-data "template_file" "python_app" {
-  template = "${file("./containers-definitions/python-app.json.tpl")}"
+resource "aws_kms_key" "example" {
+  description             = "example"
+  deletion_window_in_days = 7
+}
 
-# TODO: Declare only one template file
+resource "aws_cloudwatch_log_group" "example" {
+  name = "example"
+}
+
+
+#########################################################################
+data "template_file" "python-app" {
+  template = file("./containers-definitions/app.json.tpl")
+
   vars = {
-    # app_name       = ""
+    app_name       = "python-app"
     app_image      = "${var.app_image}"
     app_port       = "${var.app_port}"
     fargate_cpu    = "${var.fargate_cpu}"
     fargate_memory = "${var.fargate_memory}"
     aws_region     = "${var.aws_region}"
+    REDIS_HOST     = "${var.redis_host}"
+    REDIS_PORT     = "${var.redis_port}"
   }
 }
 
 data "template_file" "redis-template" {
-  template = "${file("./containers-definitions/redis.json.tpl")}"
+  template = file("./containers-definitions/redis.json.tpl")
 
   vars = {
+    app_name       = "redis"
     app_image      = "${var.redis_image}"
     app_port       = "${var.redis_port}"
     fargate_cpu    = "${var.fargate_cpu}"
@@ -27,26 +52,38 @@ data "template_file" "redis-template" {
     aws_region     = "${var.aws_region}"
   }
 }
+##########################################################################
 
 resource "aws_ecs_task_definition" "app" {
   family                   = "python-app-task"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_execution_role.arn
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.fargate_cpu
   memory                   = var.fargate_memory
-  container_definitions    = data.template_file.python_app.rendered
+  container_definitions    = data.template_file.python-app.rendered
+
+  ## env
+  # REDIS_HOST
+  # REDIS_PORT
+
+  ## logs 
 }
 
 resource "aws_ecs_task_definition" "redis" {
   family                   = "redis-task"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_execution_role.arn
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.fargate_cpu
   memory                   = var.fargate_memory
   container_definitions    = data.template_file.redis-template.rendered
+  ## logs 
 }
+
+###########################################################################
 
 resource "aws_ecs_service" "main-app" {
   name            = "app-service"
@@ -56,8 +93,8 @@ resource "aws_ecs_service" "main-app" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    security_groups  = [aws_security_group.ecs-app-sg.id]
-    subnets          = aws_subnet.private.*.id
+    security_groups = [aws_security_group.ecs-app-sg.id]
+    subnets         = aws_subnet.private.*.id
     # assign_public_ip = no
   }
   load_balancer {
@@ -65,6 +102,11 @@ resource "aws_ecs_service" "main-app" {
     container_name   = "python-app"
     container_port   = var.app_port
   }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.app-service.arn
+  }
+
   depends_on = [aws_alb_listener.front_end, aws_iam_role_policy_attachment.ecs_task_execution_role]
 }
 
@@ -76,9 +118,13 @@ resource "aws_ecs_service" "main-redis" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    security_groups  = [aws_security_group.ecs-redis-sg.id]
-    subnets          = aws_subnet.private.*.id
+    security_groups = [aws_security_group.ecs-redis-sg.id]
+    subnets         = aws_subnet.private.*.id
     # assign_public_ip = no
+  }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.redis-service.arn
   }
 
 }

@@ -21,14 +21,21 @@ resource "aws_security_group" "lb" {
 # Traffic to the ECS cluster should only come from the ALB
 resource "aws_security_group" "ecs-app-sg" {
   name        = "ecs-app-sg"
-  description = "allow inbound access from the ALB only"
+  description = "allow inbound access from the alb and redis"
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    protocol        = "tcp"
-    from_port       = var.app_port
-    to_port         = 65535
-    cidr_blocks      = [aws_vpc.main.cidr_block]
+    protocol    = "tcp"
+    from_port   = var.app_port
+    to_port     = var.app_port
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = var.redis_port
+    to_port     = var.redis_port
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
