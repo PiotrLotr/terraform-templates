@@ -23,20 +23,30 @@ resource "aws_cloudwatch_log_group" "example" {
   name = "example"
 }
 
+resource "aws_cloudwatch_log_group" "app-container-logs" {
+  name = "app-container-logs"
+}
+
+
+resource "aws_cloudwatch_log_group" "redis-container-logs" {
+  name = "redis-container-logs"
+}
 
 #########################################################################
-data "template_file" "python-app" {
+data "template_file" "app-template" {
   template = file("./containers-definitions/app.json.tpl")
 
   vars = {
-    app_name       = "python-app"
-    app_image      = "${var.app_image}"
-    app_port       = "${var.app_port}"
-    fargate_cpu    = "${var.fargate_cpu}"
-    fargate_memory = "${var.fargate_memory}"
-    aws_region     = "${var.aws_region}"
-    REDIS_HOST     = "${var.redis_host}"
-    REDIS_PORT     = "${var.redis_port}"
+    app_name         = "${var.app_container_name}"
+    app_image        = "${var.app_image}"
+    app_port         = "${var.app_port}"
+    fargate_cpu      = "${var.fargate_cpu}"
+    fargate_memory   = "${var.fargate_memory}"
+    aws_region       = "${var.aws_region}"
+    REDIS_HOST       = "${var.redis_host}"
+    REDIS_PORT       = "${var.redis_port}"
+    cloudwatch_group = aws_cloudwatch_log_group.app-container-logs.name
+    task_role        = aws_iam_role.ecs_task_execution_role.arn
   }
 }
 
@@ -44,12 +54,14 @@ data "template_file" "redis-template" {
   template = file("./containers-definitions/redis.json.tpl")
 
   vars = {
-    app_name       = "redis"
-    app_image      = "${var.redis_image}"
-    app_port       = "${var.redis_port}"
-    fargate_cpu    = "${var.fargate_cpu}"
-    fargate_memory = "${var.fargate_memory}"
-    aws_region     = "${var.aws_region}"
+    app_name         = "${var.redis_container_name}"
+    app_image        = "${var.redis_image}"
+    app_port         = "${var.redis_port}"
+    fargate_cpu      = "${var.fargate_cpu}"
+    fargate_memory   = "${var.fargate_memory}"
+    aws_region       = "${var.aws_region}"
+    cloudwatch_group = aws_cloudwatch_log_group.redis-container-logs.name
+    task_role        = aws_iam_role.ecs_task_execution_role.arn
   }
 }
 ##########################################################################
@@ -62,13 +74,7 @@ resource "aws_ecs_task_definition" "app" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.fargate_cpu
   memory                   = var.fargate_memory
-  container_definitions    = data.template_file.python-app.rendered
-
-  ## env
-  # REDIS_HOST
-  # REDIS_PORT
-
-  ## logs 
+  container_definitions    = data.template_file.app-template.rendered
 }
 
 resource "aws_ecs_task_definition" "redis" {

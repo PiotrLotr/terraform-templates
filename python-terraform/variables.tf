@@ -20,16 +20,10 @@ variable "az_count" {
   default     = "3"
 }
 
-# TODO: Hardoced var alarm in default
-variable "app_image" {
-  description = "Docker image to run in the ECS cluster"
-  default     = "251865263936.dkr.ecr.eu-central-1.amazonaws.com/app-dev:latest"
+############################################################
 
-}
-
-variable "redis_image" {
-  description = "Docker image to run in the ECS cluster"
-  default     = "redis:alpine"
+variable "app_container_name" {
+  default = "python-app"
 }
 
 variable "app_port" {
@@ -37,9 +31,26 @@ variable "app_port" {
   default     = 80
 }
 
+variable "app_count" {
+  description = "Number of docker containers to run"
+  default     = 2
+}
+
+# TODO: Hardoced var alarm in default
+variable "app_image" {
+  description = "Docker image to run in the ECS cluster"
+  default     = "251865263936.dkr.ecr.eu-central-1.amazonaws.com/app-dev:latest"
+}
+
+#############################################################
+
+variable "redis_container_name" {
+  default = "redis"
+}
+
 variable "redis_host" {
   description = "Redis hostname"
-  default     = "redis"
+  default     = "redis-service.local"
 }
 
 variable "redis_port" {
@@ -47,15 +58,18 @@ variable "redis_port" {
   default     = 6379
 }
 
-variable "app_count" {
-  description = "Number of docker containers to run"
-  default     = 2
+
+variable "redis_image" {
+  description = "Docker image to run in the ECS cluster"
+  default     = "redis:alpine"
 }
 
 variable "redis_count" {
   description = "Number of docker containers to run"
   default     = 1
 }
+
+#################################################################
 
 variable "health_check_path" {
   default = "/"
