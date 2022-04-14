@@ -7,3 +7,5 @@
 /python-terraform/.terraform/*
 /python-terraform/.terraform.lock.hcl
 /python-terraform/terraform.tfstate.d
+
+./.gitignore

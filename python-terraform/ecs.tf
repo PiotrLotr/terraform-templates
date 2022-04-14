@@ -34,7 +34,7 @@ resource "aws_cloudwatch_log_group" "redis-container-logs" {
 
 #########################################################################
 data "template_file" "app-template" {
-  template = file("./containers-definitions/app.json.tpl")
+  template = file("./containers/app.json.tpl")
 
   vars = {
     app_name         = "${var.app_container_name}"
@@ -51,7 +51,7 @@ data "template_file" "app-template" {
 }
 
 data "template_file" "redis-template" {
-  template = file("./containers-definitions/redis.json.tpl")
+  template = file("./containers/redis.json.tpl")
 
   vars = {
     app_name         = "${var.redis_container_name}"
